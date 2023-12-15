@@ -11,7 +11,7 @@
       // inertia weight for MPSO
       const W_MPSO = W * 5;
       // factor for the decreasing exponential, use for W_MPSO
-      let factor = 0;
+      let factor;
 
       // cognitive coefficient
       const c1 = 0.5;
@@ -42,106 +42,132 @@
       // record the result of current iteration
       let currentResult = [];
 
-      for (let iteration = 0; iteration < iterations; iteration++) {
-        const whichTime = iteration + 1;
-        console.log(`-----Iteration ${whichTime}-----`);
-        if (iteration === 0) {
-          // 1. initial 1st round data
-          currentResult = Array(particle)
-            .fill()
-            .map((each) => {
-              const positionX = randomValue(min, max);
-              const positionY = randomValue(min, max);
-              const velocityX = randomValue(min, max);
-              const velocityY = randomValue(min, max);
+      // record mean, std dev, array length for 2 algorithms and ttest result. 1 is MPSO, 2 is SPSO.
+      var ttest = {
+        mean1: undefined,
+        std1: undefined,
+        n1: undefined,
+        mean2: undefined,
+        std2: undefined,
+        n2: undefined,
+        result: undefined
+      };
+
+      function resetValues() {
+        factor = 0;
+        currentGBest = undefined;
+        currentGBestPositionX = undefined;
+        currentGBestPositionY = undefined;
+        gBestValues = [];
+        currentResult = [];
+      }
+
+      function wholeRun(mode) {
+        for (let iteration = 0; iteration < iterations; iteration++) {
+          const whichTime = iteration + 1;
+          console.log(`-----Iteration ${whichTime}-----`);
+          if (iteration === 0) {
+            // reset values
+            resetValues();
+            // 1. initial 1st round data
+            currentResult = Array(particle)
+              .fill()
+              .map((each) => {
+                const positionX = randomValue(min, max);
+                const positionY = randomValue(min, max);
+                const velocityX = randomValue(min, max);
+                const velocityY = randomValue(min, max);
+                const fucVal = benchmark(positionX, positionY);
+                return {
+                  positionX,
+                  positionY,
+                  velocityX,
+                  velocityY,
+                  fucVal,
+                  pBest: fucVal,
+                  pBestPositionX: positionX,
+                  pBestPositionY: positionY
+                };
+              });
+
+            organizeResult(currentResult);
+          } else {
+            /*
+            MPSO
+            More than SPSO setting of W at first, decreasing exponentially.
+
+            If the algorithm is trapped in local minima (current particle best is not smaller than current global best), we modify W to make it even smaller
+            */
+            // update factor for W_MPSO
+            // start to decrease factor at the 3rd iteration
+            if (whichTime > 2) {
+              factor = factor + 1;
+            }
+
+            const currentW_MPSO = getNewW_MPSO();
+
+            // 2. update current result
+            // copy result from the last iteration
+            const lastIteration = [...currentResult];
+
+            currentResult = lastIteration.map((each) => {
+              const r1X = randomValue(0, 1);
+              const r2X = randomValue(0, 1);
+              const r1Y = randomValue(0, 1);
+              const r2Y = randomValue(0, 1);
+              // Vit+1 = wVit + c1r1(Pit - Xit)+c2r2(Gt-xit)
+              // when mode === 'SPSO', then w value goes for SPSO, when mode is not SPSO, goes for MPSO
+              const isSPSO = mode === 'SPSO';
+              const wVitX = isSPSO
+                ? W * each.velocityX
+                : currentW_MPSO * each.velocityX;
+
+              const wVitY = isSPSO
+                ? W * each.velocityY
+                : currentW_MPSO * each.velocityY;
+
+              const velocityX =
+                wVitX +
+                c1 * r1X * (each.pBestPositionX - each.positionX) +
+                c2 * r2X * (currentGBestPositionX - each.positionX);
+
+              const velocityY =
+                wVitY +
+                c1 * r1Y * (each.pBestPositionY - each.positionY) +
+                c2 * r2Y * (currentGBestPositionY - each.positionY);
+              // Xit+1 = Xit +Vit+1
+              const positionX = each.positionX + velocityX;
+              const positionY = each.positionY + velocityY;
+
               const fucVal = benchmark(positionX, positionY);
+
+              const currentIsBetter = fucVal < each.pBest;
+
+              const pBest = currentIsBetter ? fucVal : each.pBest;
+              const pBestPositionX = currentIsBetter
+                ? positionX
+                : each.pBestPositionX;
+              const pBestPositionY = currentIsBetter
+                ? positionY
+                : each.pBestPositionY;
+
               return {
                 positionX,
                 positionY,
                 velocityX,
                 velocityY,
                 fucVal,
-                pBest: fucVal,
-                pBestPositionX: positionX,
-                pBestPositionY: positionY
+                pBest,
+                pBestPositionX,
+                pBestPositionY
               };
             });
-
-          organizeResult(currentResult);
-        } else {
-          /*
-            MPSO
-            More than SPSO setting of W at first, decreasing exponentially.
-
-            If the algorithm is trapped in local minima (current particle best is not smaller than current global best), we modify W to make it even smaller
-            */
-          // update factor for W_MPSO
-          // start to decrease factor at the 3rd iteration
-          if (whichTime > 2) {
-            factor = factor + 1;
+            organizeResult(currentResult);
           }
-
-          const currentW_MPSO = getNewW_MPSO();
-
-          // 2. update current result
-          // copy result from the last iteration
-          const lastIteration = [...currentResult];
-
-          currentResult = lastIteration.map((each) => {
-            const r1X = randomValue(0, 1);
-            const r2X = randomValue(0, 1);
-            const r1Y = randomValue(0, 1);
-            const r2Y = randomValue(0, 1);
-            // Vit+1 = wVit + c1r1(Pit - Xit)+c2r2(Gt-xit)
-            // SPSO
-            const wVitX = W * each.velocityX;
-            const wVitY = W * each.velocityY;
-
-            // MPSO
-            // const wVitX = currentW_MPSO * each.velocityX;
-            // const wVitY = currentW_MPSO * each.velocityY;
-
-            const velocityX =
-              wVitX +
-              c1 * r1X * (each.pBestPositionX - each.positionX) +
-              c2 * r2X * (currentGBestPositionX - each.positionX);
-
-            const velocityY =
-              wVitY +
-              c1 * r1Y * (each.pBestPositionY - each.positionY) +
-              c2 * r2Y * (currentGBestPositionY - each.positionY);
-            // Xit+1 = Xit +Vit+1
-            const positionX = each.positionX + velocityX;
-            const positionY = each.positionY + velocityY;
-
-            const fucVal = benchmark(positionX, positionY);
-
-            const currentIsBetter = fucVal < each.pBest;
-
-            const pBest = currentIsBetter ? fucVal : each.pBest;
-            const pBestPositionX = currentIsBetter
-              ? positionX
-              : each.pBestPositionX;
-            const pBestPositionY = currentIsBetter
-              ? positionY
-              : each.pBestPositionY;
-
-            return {
-              positionX,
-              positionY,
-              velocityX,
-              velocityY,
-              fucVal,
-              pBest,
-              pBestPositionX,
-              pBestPositionY
-            };
-          });
-          organizeResult(currentResult);
         }
-      }
 
-      calculateStdDev(gBestValues);
+        calculateStdDev(gBestValues, mode);
+      }
 
       // generate random value within the giving range
       function randomValue(min, max) {
@@ -195,7 +221,7 @@
         return mean;
       }
 
-      function calculateStdDev(arr) {
+      function calculateStdDev(arr, mode) {
         const mean = calculateMean(arr);
 
         const n = arr.length;
@@ -208,9 +234,45 @@
 
         const stdDev = Math.sqrt(all / n);
 
-        console.log('mean: ', mean, 'stdDev: ', stdDev);
+        console.log('mean: ', mean, 'stdDev: ', stdDev, mode);
+        if (mode === 'SPSO') {
+          ttest.mean2 = mean;
+          ttest.std2 = stdDev;
+          ttest.n2 = n;
+        } else {
+          ttest.mean1 = mean;
+          ttest.std1 = stdDev;
+          ttest.n1 = n;
+        }
 
         return stdDev;
+      }
+
+      function calculateTTest(data) {
+        const dataIsValid =
+          data &&
+          data.mean1 &&
+          data.std1 &&
+          data.n1 &&
+          data.mean2 &&
+          data.std2 &&
+          data.n2;
+
+        if (dataIsValid) {
+          const tValue =
+            (data.mean2 - data.mean1) /
+            Math.sqrt(
+              (data.std2 * data.std2) / (data.n2 + 1) +
+                (data.std1 * data.std1) / (data.n1 + 1)
+            );
+          ttest.result = tValue;
+          console.log('Run til the end', ttest);
+
+          return tValue;
+        } else {
+          console.log('Data is invalid', data);
+          return undefined;
+        }
       }
 
       function getNewW_MPSO() {
@@ -218,6 +280,11 @@
         const newValue = W_MPSO / Math.pow(2, factor);
         return newValue;
       }
+
+      wholeRun();
+      wholeRun('SPSO');
+
+      calculateTTest(ttest);
     </script>
   </head>
   <body>
