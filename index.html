@@ -17,12 +17,19 @@
       const max = 100;
 
       // iteration times
-      const iterations = 20;
+      const iterations = 25;
       // how many individual in a particle
       const particle = 30;
 
-      // current Global best
+      // current Global best value
       let currentGBest;
+
+      // current global best position for x
+      let currentGBestPositionX;
+
+      // current global best position for y
+      let currentGBestPositionY;
+
       // store gBest values to calculate mean value
       let gBestValues = [];
 
@@ -37,15 +44,20 @@
           currentResult = Array(particle)
             .fill()
             .map((each) => {
-              const position = randomValue(min, max);
-              const velocity = randomValue(min, max);
-              const fucVal = benchmark(position);
+              const positionX = randomValue(min, max);
+              const positionY = randomValue(min, max);
+              const velocityX = randomValue(min, max);
+              const velocityY = randomValue(min, max);
+              const fucVal = benchmark(positionX, positionY);
               return {
-                position,
-                velocity,
+                positionX,
+                positionY,
+                velocityX,
+                velocityY,
                 fucVal,
                 pBest: fucVal,
-                pBestPosition: position
+                pBestPositionX: positionX,
+                pBestPositionY: positionY
               };
             });
 
@@ -56,37 +68,57 @@
           const lastIteration = [...currentResult];
 
           currentResult = lastIteration.map((each) => {
-            const r1 = randomValue(0, 1);
-            const r2 = randomValue(0, 1);
+            const r1X = randomValue(0, 1);
+            const r2X = randomValue(0, 1);
+            const r1Y = randomValue(0, 1);
+            const r2Y = randomValue(0, 1);
             // Vit+1 = wVit + c1r1(Pit - Xit)+c2r2(Gt-xit)
-            const wVit = W * each.velocity; // SPSO
+            // SPSO
+            const wVitX = W * each.velocityX;
+            const wVitY = W * each.velocityY;
 
             /* 
             MPSO
             w close to 0.9 at first, decreasing gradually until 0.1 at the end of the iteration
             */
+            // MPSO
             const W_MPSO = 0.9 - 0.8 * ((iteration + 1) / iterations);
-            // const wVit = W_MPSO * each.velocity; // MPSO
+            // const wVitX = W_MPSO * each.velocityX;
+            // const wVitY = W_MPSO * each.velocityY;
 
-            const velocity =
-              wVit +
-              c1 * r1 * (each.pBestPosition - each.position) +
-              c2 * r2 * (currentGBestPosition - each.position);
+            const velocityX =
+              wVitX +
+              c1 * r1X * (each.pBestPositionX - each.positionX) +
+              c2 * r2X * (currentGBestPositionX - each.positionX);
+
+            const velocityY =
+              wVitY +
+              c1 * r1Y * (each.pBestPositionY - each.positionY) +
+              c2 * r2Y * (currentGBestPositionY - each.positionY);
             // Xit+1 = Xit +Vit+1
-            const position = each.position + velocity;
+            const positionX = each.positionX + velocityX;
+            const positionY = each.positionY + velocityY;
 
-            const fucVal = benchmark(position);
+            const fucVal = benchmark(positionX, positionY);
 
-            const pBest = each.pBest < fucVal ? each.pBest : fucVal;
-            const pBestPosition =
-              each.pBest < fucVal ? each.pBestPosition : position;
+            const currentIsBetter = fucVal < each.pBest;
 
+            const pBest = currentIsBetter ? fucVal : each.pBest;
+            const pBestPositionX = currentIsBetter
+              ? positionX
+              : each.pBestPositionX;
+            const pBestPositionY = currentIsBetter
+              ? positionY
+              : each.pBestPositionY;
             return {
-              position,
-              velocity,
+              positionX,
+              positionY,
+              velocityX,
+              velocityY,
               fucVal,
               pBest,
-              pBestPosition
+              pBestPositionX,
+              pBestPositionY
             };
           });
           organizeResult(currentResult);
@@ -101,8 +133,8 @@
       }
 
       // benchmark functions
-      function benchmark(x) {
-        return x ** 2;
+      function benchmark(x, y) {
+        return x ** 2 + y ** 2;
       }
 
       //  organize result
@@ -116,7 +148,8 @@
           currentGBest === undefined ||
           (currentGBest && sortDataFucValBest < currentGBest)
         ) {
-          currentGBestPosition = sortData[0].position;
+          currentGBestPositionX = sortData[0].positionX;
+          currentGBestPositionY = sortData[0].positionY;
 
           currentGBest = sortDataFucValBest;
         }
