@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PSO</title>
+    <script>
+      // inertia weight for SPSO
+      const W = 0.05;
+      // cognitive coefficient
+      const c1 = 0.5;
+      // social coefficient
+      const c2 = 2.5;
+
+      // search range
+      const min = -100;
+      const max = 100;
+
+      // iteration times
+      const iterations = 20;
+      // how many individual in a particle
+      const particle = 30;
+
+      // current Global best
+      let currentGBest;
+      // store gBest values to calculate mean value
+      let gBestValues = [];
+
+      // record the result of current iteration
+      let currentResult = [];
+
+      for (let iteration = 0; iteration < iterations; iteration++) {
+        const whichTime = iteration + 1;
+        console.log(`-----Iteration ${whichTime}-----`);
+        if (iteration === 0) {
+          // 1. initial 1st round data
+          currentResult = Array(particle)
+            .fill()
+            .map((each) => {
+              const position = randomValue(min, max);
+              const velocity = randomValue(min, max);
+              const fucVal = benchmark(position);
+              return {
+                position,
+                velocity,
+                fucVal,
+                pBest: fucVal,
+                pBestPosition: position
+              };
+            });
+
+          organizeResult(currentResult);
+        } else {
+          // 2. update current result
+          // copy result from the last iteration
+          const lastIteration = [...currentResult];
+
+          currentResult = lastIteration.map((each) => {
+            const r1 = randomValue(0, 1);
+            const r2 = randomValue(0, 1);
+            // Vit+1 = wVit + c1r1(Pit - Xit)+c2r2(Gt-xit)
+            const wVit = W * each.velocity; // SPSO
+
+            /* 
+            MPSO
+            w close to 0.9 at first, decreasing gradually until 0.1 at the end of the iteration
+            */
+            const W_MPSO = 0.9 - 0.8 * ((iteration + 1) / iterations);
+            // const wVit = W_MPSO * each.velocity; // MPSO
+
+            const velocity =
+              wVit +
+              c1 * r1 * (each.pBestPosition - each.position) +
+              c2 * r2 * (currentGBestPosition - each.position);
+            // Xit+1 = Xit +Vit+1
+            const position = each.position + velocity;
+
+            const fucVal = benchmark(position);
+
+            const pBest = each.pBest < fucVal ? each.pBest : fucVal;
+            const pBestPosition =
+              each.pBest < fucVal ? each.pBestPosition : position;
+
+            return {
+              position,
+              velocity,
+              fucVal,
+              pBest,
+              pBestPosition
+            };
+          });
+          organizeResult(currentResult);
+        }
+      }
+
+      calculateStdDev(gBestValues);
+
+      // generate random value within the giving range
+      function randomValue(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      // benchmark functions
+      function benchmark(x) {
+        return x ** 2;
+      }
+
+      //  organize result
+      function organizeResult(data) {
+        // find and record the current global best value
+        const sortData = data.toSorted((a, b) => a.pBest - b.pBest);
+
+        // toFixed will also convert the number to string, so change it back to number
+        const sortDataFucValBest = Number(sortData[0].fucVal.toFixed(2));
+        if (
+          currentGBest === undefined ||
+          (currentGBest && sortDataFucValBest < currentGBest)
+        ) {
+          currentGBestPosition = sortData[0].position;
+
+          currentGBest = sortDataFucValBest;
+        }
+
+        // print current result
+        console.log('Current result: ', currentResult);
+        // print current global best value
+
+        console.log('Current gBest: ', currentGBest);
+        // store the current gBest
+        gBestValues.push(currentGBest);
+      }
+
+      function calculateMean(arr) {
+        const sum = arr.reduce(
+          (accumulator, currentValue) => accumulator + currentValue,
+          0
+        );
+        const n = arr.length;
+
+        const mean = sum / n;
+
+        return mean;
+      }
+
+      function calculateStdDev(arr) {
+        const mean = calculateMean(arr);
+
+        const n = arr.length;
+
+        const all = arr
+          .map((each) => {
+            return (each - mean) ** 2;
+          })
+          .reduce((acc, cur) => acc + cur, 0);
+
+        const stdDev = Math.sqrt(all / n);
+
+        console.log('mean: ', mean, 'stdDev: ', stdDev);
+
+        return stdDev;
+      }
+    </script>
+  </head>
+  <body>
+    <script></script>
+  </body>
+</html>
