@@ -288,6 +288,11 @@
     </script>
   </head>
   <body>
-    <script></script>
+    <div id="result"></div>
+
+    <script>
+      document.querySelector('#result').innerHTML =
+        '<pre>' + JSON.stringify(ttest, undefined, 2) + '</pre>';
+    </script>
   </body>
 </html>
