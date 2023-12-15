@@ -7,6 +7,12 @@
     <script>
       // inertia weight for SPSO
       const W = 0.05;
+
+      // inertia weight for MPSO
+      const W_MPSO = W * 5;
+      // factor for the decreasing exponential, use for W_MPSO
+      let factor = 0;
+
       // cognitive coefficient
       const c1 = 0.5;
       // social coefficient
@@ -63,6 +69,20 @@
 
           organizeResult(currentResult);
         } else {
+          /*
+            MPSO
+            More than SPSO setting of W at first, decreasing exponentially.
+
+            If the algorithm is trapped in local minima (current particle best is not smaller than current global best), we modify W to make it even smaller
+            */
+          // update factor for W_MPSO
+          // start to decrease factor at the 3rd iteration
+          if (whichTime > 2) {
+            factor = factor + 1;
+          }
+
+          const currentW_MPSO = getNewW_MPSO();
+
           // 2. update current result
           // copy result from the last iteration
           const lastIteration = [...currentResult];
@@ -77,14 +97,9 @@
             const wVitX = W * each.velocityX;
             const wVitY = W * each.velocityY;
 
-            /* 
-            MPSO
-            w close to 0.9 at first, decreasing gradually until 0.1 at the end of the iteration
-            */
             // MPSO
-            const W_MPSO = 0.9 - 0.8 * ((iteration + 1) / iterations);
-            // const wVitX = W_MPSO * each.velocityX;
-            // const wVitY = W_MPSO * each.velocityY;
+            // const wVitX = currentW_MPSO * each.velocityX;
+            // const wVitY = currentW_MPSO * each.velocityY;
 
             const velocityX =
               wVitX +
@@ -110,6 +125,7 @@
             const pBestPositionY = currentIsBetter
               ? positionY
               : each.pBestPositionY;
+
             return {
               positionX,
               positionY,
@@ -152,6 +168,10 @@
           currentGBestPositionY = sortData[0].positionY;
 
           currentGBest = sortDataFucValBest;
+        } else if (sortDataFucValBest > currentGBest) {
+          // means trap in the local minima, so we make w smaller
+          factor = factor + 1;
+          console.log('trap in the local minima');
         }
 
         // print current result
@@ -191,6 +211,12 @@
         console.log('mean: ', mean, 'stdDev: ', stdDev);
 
         return stdDev;
+      }
+
+      function getNewW_MPSO() {
+        // start from the setting of W_MPSO, and then divide the value by 2 every time when factor is incremented by 1.
+        const newValue = W_MPSO / Math.pow(2, factor);
+        return newValue;
       }
     </script>
   </head>
