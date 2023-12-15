@@ -10,7 +10,7 @@
 
       // inertia weight for MPSO
       const W_MPSO = W * 5;
-      // factor for the decreasing exponential, use for W_MPSO
+      // factor for the exponential decreasing, use for W_MPSO
       let factor;
 
       // cognitive coefficient
@@ -50,7 +50,7 @@
         mean2: undefined,
         std2: undefined,
         n2: undefined,
-        result: undefined
+        t_test: undefined
       };
 
       function resetValues() {
@@ -96,7 +96,7 @@
             MPSO
             More than SPSO setting of W at first, decreasing exponentially.
 
-            If the algorithm is trapped in local minima (current particle best is not smaller than current global best), we modify W to make it even smaller
+            If the algorithm is trapped in local minima (current particle best is not smaller than current global best), we modify W to make it even smaller. Of course, w is not the only reason for this.
             */
             // update factor for W_MPSO
             // start to decrease factor at the 3rd iteration
@@ -265,7 +265,7 @@
               (data.std2 * data.std2) / (data.n2 + 1) +
                 (data.std1 * data.std1) / (data.n1 + 1)
             );
-          ttest.result = tValue;
+          ttest.t_test = tValue;
           console.log('Run til the end', ttest);
 
           return tValue;
@@ -288,6 +288,8 @@
     </script>
   </head>
   <body>
+    1 is MPSO, 2 is SPSO.
+    <hr />
     <div id="result"></div>
 
     <script>
