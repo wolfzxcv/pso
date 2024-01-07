@@ -19,11 +19,11 @@
       const c2 = 2.5;
 
       // search range
-      const min = -100;
-      const max = 100;
+      const min = -2.56;
+      const max = 2.56;
 
       // iteration times
-      const iterations = 25;
+      const iterations = 50;
       // how many individual in a particle
       const particle = 30;
 
@@ -62,7 +62,7 @@
         currentResult = [];
       }
 
-      function wholeRun(mode) {
+      function wholeRun(mode, functionName) {
         for (let iteration = 0; iteration < iterations; iteration++) {
           const whichTime = iteration + 1;
           console.log(`-----Iteration ${whichTime}-----`);
@@ -77,7 +77,7 @@
                 const positionY = randomValue(min, max);
                 const velocityX = randomValue(min, max);
                 const velocityY = randomValue(min, max);
-                const fucVal = benchmark(positionX, positionY);
+                const fucVal = benchmark([positionX, positionY], functionName);
                 return {
                   positionX,
                   positionY,
@@ -104,7 +104,9 @@
               factor = factor + 1;
             }
 
-            const currentW_MPSO = getNewW_MPSO();
+            // const currentW_MPSO = getNewW_MPSO();
+            const currentW_MPSO =
+              0.9 - ((iteration - 1) * 0.8) / (iterations - 1);
 
             // 2. update current result
             // copy result from the last iteration
@@ -139,7 +141,7 @@
               const positionX = each.positionX + velocityX;
               const positionY = each.positionY + velocityY;
 
-              const fucVal = benchmark(positionX, positionY);
+              const fucVal = benchmark([positionX, positionY], functionName);
 
               const currentIsBetter = fucVal < each.pBest;
 
@@ -175,8 +177,28 @@
       }
 
       // benchmark functions
-      function benchmark(x, y) {
-        return x ** 2 + y ** 2;
+      function benchmark(arr, type) {
+        switch (type) {
+          // Sphere Function
+          case 'Sphere':
+            return arr[0] ** 2 + arr[1] ** 2;
+          // Rosenbrock function
+          case 'Rosenbrock':
+            return 100 * (arr[1] - arr[0] ** 2) ** 2 + (1 - arr[0]) ** 2;
+          // Step 2 Function
+          case 'Step2':
+            return (arr[0] + 0.5) ** 2 + (arr[1] + 0.5) ** 2;
+          // Quartic Function
+          case 'Quartic':
+            return (
+              Math.pow(arr[0], 4) +
+              randomValue(0, 1) +
+              2 * Math.pow(arr[1], 4) +
+              randomValue(0, 1)
+            );
+          default:
+            return 0;
+        }
       }
 
       //  organize result
@@ -195,9 +217,9 @@
 
           currentGBest = sortDataFucValBest;
         } else if (sortDataFucValBest > currentGBest) {
-          // means trap in the local minima, so we make w smaller
+          // means current pBest is not better than gBest, so we make w smaller, so we will have better chance to avoid this situation again in the next iteration
           factor = factor + 1;
-          console.log('trap in the local minima');
+          console.log('Current pBest is not better than gBest');
         }
 
         // print current result
@@ -233,8 +255,8 @@
           .reduce((acc, cur) => acc + cur, 0);
 
         const stdDev = Math.sqrt(all / n);
-
         console.log('mean: ', mean, 'stdDev: ', stdDev, mode);
+
         if (mode === 'SPSO') {
           ttest.mean2 = mean;
           ttest.std2 = stdDev;
@@ -281,18 +303,24 @@
         return newValue;
       }
 
-      wholeRun();
-      wholeRun('SPSO');
+      const benchmarkFunctionName = 'Quartic';
+
+      wholeRun('MPSO', benchmarkFunctionName);
+      wholeRun('SPSO', benchmarkFunctionName);
 
       calculateTTest(ttest);
     </script>
   </head>
   <body>
-    1 is MPSO, 2 is SPSO.
+    1 is MPSO, 2 is SPSO. Benchmark function is:
+    <span id="functionName"></span>
     <hr />
     <div id="result"></div>
 
     <script>
+      document.querySelector('#functionName').textContent =
+        benchmarkFunctionName;
+
       document.querySelector('#result').innerHTML =
         '<pre>' + JSON.stringify(ttest, undefined, 2) + '</pre>';
     </script>
