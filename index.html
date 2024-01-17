@@ -19,8 +19,8 @@
       const c2 = 2.5;
 
       // search range
-      const min = -2.56;
-      const max = 2.56;
+      const min = -10;
+      const max = 10;
 
       // iteration times
       const iterations = 50;
@@ -182,9 +182,6 @@
           // Sphere Function
           case 'Sphere':
             return arr[0] ** 2 + arr[1] ** 2;
-          // Rosenbrock function
-          case 'Rosenbrock':
-            return 100 * (arr[1] - arr[0] ** 2) ** 2 + (1 - arr[0]) ** 2;
           // Step 2 Function
           case 'Step2':
             return (arr[0] + 0.5) ** 2 + (arr[1] + 0.5) ** 2;
@@ -196,6 +193,9 @@
               2 * Math.pow(arr[1], 4) +
               randomValue(0, 1)
             );
+          // Rosenbrock function
+          // case 'Rosenbrock':
+          //   return 100 * (arr[1] - arr[0] ** 2) ** 2 + (1 - arr[0]) ** 2;
           default:
             return 0;
         }
@@ -303,7 +303,7 @@
         return newValue;
       }
 
-      const benchmarkFunctionName = 'Quartic';
+      const benchmarkFunctionName = 'Step2';
 
       wholeRun('MPSO', benchmarkFunctionName);
       wholeRun('SPSO', benchmarkFunctionName);
