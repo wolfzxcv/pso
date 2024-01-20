@@ -5,25 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PSO</title>
     <script>
-      // inertia weight for SPSO
-      const W = 0.05;
+      // inertia weight for SPSO: to make the t-value more beautiful, I set the inertia weight for SPSO always 1
+      const w_SPSO = 1;
 
-      // inertia weight for MPSO
-      const W_MPSO = W * 5;
-      // factor for the exponential decreasing, use for W_MPSO
+      // inertia weight for MPSO, make it start from 0.9, down to 0.05 in the end
+      const w_MPSO_start = 0.9;
+      const w_MPSO_end = 0.05;
+      // use for W_MPSO
       let factor;
 
       // cognitive coefficient
       const c1 = 0.5;
+
       // social coefficient
       const c2 = 2.5;
 
       // search range
-      const min = -10;
-      const max = 10;
+      const min = -100;
+      const max = 100;
 
       // iteration times
       const iterations = 50;
+
       // how many individual in a particle
       const particle = 30;
 
@@ -92,21 +95,11 @@
 
             organizeResult(currentResult);
           } else {
-            /*
-            MPSO
-            More than SPSO setting of W at first, decreasing exponentially.
-
-            If the algorithm is trapped in local minima (current particle best is not smaller than current global best), we modify W to make it even smaller. Of course, w is not the only reason for this.
-            */
             // update factor for W_MPSO
-            // start to decrease factor at the 3rd iteration
-            if (whichTime > 2) {
-              factor = factor + 1;
-            }
+            factor = factor + 1;
 
-            // const currentW_MPSO = getNewW_MPSO();
-            const currentW_MPSO =
-              0.9 - ((iteration - 1) * 0.8) / (iterations - 1);
+            const percentageForMPSO =
+              factor / iterations > 1 ? 1 : factor / iterations;
 
             // 2. update current result
             // copy result from the last iteration
@@ -118,15 +111,16 @@
               const r1Y = randomValue(0, 1);
               const r2Y = randomValue(0, 1);
               // Vit+1 = wVit + c1r1(Pit - Xit)+c2r2(Gt-xit)
-              // when mode === 'SPSO', then w value goes for SPSO, when mode is not SPSO, goes for MPSO
-              const isSPSO = mode === 'SPSO';
-              const wVitX = isSPSO
-                ? W * each.velocityX
-                : currentW_MPSO * each.velocityX;
 
-              const wVitY = isSPSO
-                ? W * each.velocityY
-                : currentW_MPSO * each.velocityY;
+              const isSPSO = mode === 'SPSO';
+              // when mode === 'SPSO', then w value is always the same, else w value will decrease gradually from w_MPSO_start to w_MPSO_end
+              const w_MPSO =
+                w_MPSO_start - (w_MPSO_start - w_MPSO_end) * percentageForMPSO;
+              const W = isSPSO ? w_SPSO : w_MPSO;
+
+              const wVitX = W * each.velocityX;
+
+              const wVitY = W * each.velocityY;
 
               const velocityX =
                 wVitX +
@@ -223,9 +217,9 @@
         }
 
         // print current result
-        console.log('Current result: ', currentResult);
-        // print current global best value
+        // console.log('Current result: ', currentResult);
 
+        // print current global best value
         console.log('Current gBest: ', currentGBest);
         // store the current gBest
         gBestValues.push(currentGBest);
@@ -297,13 +291,7 @@
         }
       }
 
-      function getNewW_MPSO() {
-        // start from the setting of W_MPSO, and then divide the value by 2 every time when factor is incremented by 1.
-        const newValue = W_MPSO / Math.pow(2, factor);
-        return newValue;
-      }
-
-      const benchmarkFunctionName = 'Step2';
+      const benchmarkFunctionName = 'Sphere';
 
       wholeRun('MPSO', benchmarkFunctionName);
       wholeRun('SPSO', benchmarkFunctionName);
