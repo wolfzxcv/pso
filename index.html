@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PSO</title>
+    <script src="benchmark.js"></script>
     <script>
       // inertia weight for SPSO: to make the t-value more beautiful, I set the inertia weight for SPSO always 1
       const w_SPSO = 1;
@@ -21,8 +22,8 @@
       const c2 = 2.5;
 
       // search range
-      const min = -100;
-      const max = 100;
+      const min = -10;
+      const max = 10;
 
       // iteration times
       const iterations = 50;
@@ -170,31 +171,6 @@
         return Math.random() * (max - min) + min;
       }
 
-      // benchmark functions
-      function benchmark(arr, type) {
-        switch (type) {
-          // Sphere Function
-          case 'Sphere':
-            return arr[0] ** 2 + arr[1] ** 2;
-          // Step 2 Function
-          case 'Step2':
-            return (arr[0] + 0.5) ** 2 + (arr[1] + 0.5) ** 2;
-          // Quartic Function
-          case 'Quartic':
-            return (
-              Math.pow(arr[0], 4) +
-              randomValue(0, 1) +
-              2 * Math.pow(arr[1], 4) +
-              randomValue(0, 1)
-            );
-          // Rosenbrock function
-          // case 'Rosenbrock':
-          //   return 100 * (arr[1] - arr[0] ** 2) ** 2 + (1 - arr[0]) ** 2;
-          default:
-            return 0;
-        }
-      }
-
       //  organize result
       function organizeResult(data) {
         // find and record the current global best value
@@ -291,7 +267,7 @@
         }
       }
 
-      const benchmarkFunctionName = 'Sphere';
+      const benchmarkFunctionName = 'Alpine';
 
       wholeRun('MPSO', benchmarkFunctionName);
       wholeRun('SPSO', benchmarkFunctionName);
