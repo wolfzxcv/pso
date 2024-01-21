@@ -32,9 +32,9 @@
 
 ### Reference
 
-[PyBenchFCN ](https://github.com/Y1fanHE/PyBenchFCN)
-[Optimization Test Functions and Datasets](https://www.sfu.ca/~ssurjano/optimization.html)
-[Benchmark Functions - A Python Library](https://gitlab.com/luca.baronti/python_benchmark_functions)
-[Test functions for optimization](https://en.wikipedia.org/wiki/Test_functions_for_optimization)
-[Alroomi Website - n-Dimensions](https://al-roomi.org/benchmarks/unconstrained/n-dimensions/)
-[Rotated Hyper-Ellipsoid Function](https://www.indusmic.com/post/rotated-hyper-ellipsoid-function)
+- [PyBenchFCN ](https://github.com/Y1fanHE/PyBenchFCN)
+- [Optimization Test Functions and Datasets](https://www.sfu.ca/~ssurjano/optimization.html)
+- [Benchmark Functions - A Python Library](https://gitlab.com/luca.baronti/python_benchmark_functions)
+- [Test functions for optimization](https://en.wikipedia.org/wiki/Test_functions_for_optimization)
+- [Alroomi Website - n-Dimensions](https://al-roomi.org/benchmarks/unconstrained/n-dimensions/)
+- [Rotated Hyper-Ellipsoid Function](https://www.indusmic.com/post/rotated-hyper-ellipsoid-function)
