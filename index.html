@@ -6,24 +6,33 @@
     <title>PSO</title>
     <script src="benchmark.js"></script>
     <script>
+      // benchmark function we will use this time
+      const benchmarkFunctionName = 'Schwefel222';
+
+      // search range
+      const min = -10;
+      const max = 10;
+
       // inertia weight for SPSO: to make the t-value more beautiful, I set the inertia weight for SPSO always 1
       const w_SPSO = 1;
 
       // inertia weight for MPSO, make it start from 0.9, down to 0.05 in the end
-      const w_MPSO_start = 0.9;
-      const w_MPSO_end = 0.05;
-      // use for W_MPSO
+      const w_start = 0.9;
+      const w_end = 0.05;
+      // use for W_MPSO, because we can't be sure when will we get the optimal value, when our pBest is not better than gBest in an iteration, we increment factor by 1, and will make the w smaller, to make the chance of this situation happens again lower
       let factor;
 
       // cognitive coefficient
       const c1 = 0.5;
+      // c1 for MPSO, make it start from 2.5, down to 0.5 in the end
+      const c1_start = 2.5;
+      const c1_end = 0.5;
 
       // social coefficient
       const c2 = 2.5;
-
-      // search range
-      const min = -100;
-      const max = 100;
+      // c1 for MPSO, make it start from 0.5, grow to 2.5 in the end
+      const c2_start = 0.5;
+      const c2_end = 2.5;
 
       // iteration times
       const iterations = 50;
@@ -102,6 +111,8 @@
             const percentageForMPSO =
               factor / iterations > 1 ? 1 : factor / iterations;
 
+            const percentage = whichTime / iterations;
+
             // 2. update current result
             // copy result from the last iteration
             const lastIteration = [...currentResult];
@@ -111,27 +122,35 @@
               const r2X = randomValue(0, 1);
               const r1Y = randomValue(0, 1);
               const r2Y = randomValue(0, 1);
-              // Vit+1 = wVit + c1r1(Pit - Xit)+c2r2(Gt-xit)
+
+              // Vit+1 = wVit + c1r1(Pit - Xit)+c2r2(Gt-Xit)
 
               const isSPSO = mode === 'SPSO';
-              // when mode === 'SPSO', then w value is always the same, else w value will decrease gradually from w_MPSO_start to w_MPSO_end
-              const w_MPSO =
-                w_MPSO_start - (w_MPSO_start - w_MPSO_end) * percentageForMPSO;
+              // when mode === 'SPSO', then w value is always the same, else w value will decrease gradually from w_start to w_end
+              const w_MPSO = w_start - (w_start - w_end) * percentageForMPSO;
               const W = isSPSO ? w_SPSO : w_MPSO;
 
               const wVitX = W * each.velocityX;
 
               const wVitY = W * each.velocityY;
 
+              // when mode === 'SPSO', then c1 value is always the same, else c1 value will decrease gradually from c1_start to c1_end
+              const c1_MPSO = c1_start - (c1_start - c1_end) * percentage;
+              const C1 = isSPSO ? c1 : c1_MPSO;
+
+              // when mode === 'SPSO', then c2 value is always the same, else c2 value will increase gradually from c2_start to c2_end
+              const c2_MPSO = c2_start + (c2_end - c2_start) * percentage;
+              const C2 = isSPSO ? c2 : c2_MPSO;
+
               const velocityX =
                 wVitX +
-                c1 * r1X * (each.pBestPositionX - each.positionX) +
-                c2 * r2X * (currentGBestPositionX - each.positionX);
+                C1 * r1X * (each.pBestPositionX - each.positionX) +
+                C2 * r2X * (currentGBestPositionX - each.positionX);
 
               const velocityY =
                 wVitY +
-                c1 * r1Y * (each.pBestPositionY - each.positionY) +
-                c2 * r2Y * (currentGBestPositionY - each.positionY);
+                C1 * r1Y * (each.pBestPositionY - each.positionY) +
+                C2 * r2Y * (currentGBestPositionY - each.positionY);
               // Xit+1 = Xit +Vit+1
               const positionX = each.positionX + velocityX;
               const positionY = each.positionY + velocityY;
@@ -266,8 +285,6 @@
           return undefined;
         }
       }
-
-      const benchmarkFunctionName = 'Sphere';
 
       wholeRun('MPSO', benchmarkFunctionName);
       wholeRun('SPSO', benchmarkFunctionName);

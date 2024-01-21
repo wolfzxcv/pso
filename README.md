@@ -7,8 +7,8 @@
 
 ### Usage
 
-- Modify line 25 and 26 for search range (see below)
-- Modify line 270 to change the benchmark functions
+- Modify line 10 to change the benchmark functions
+- Modify line 13 and 14 for search range (see below)
 
 ### Benchmark functions list
 
@@ -38,3 +38,4 @@
 - [Test functions for optimization](https://en.wikipedia.org/wiki/Test_functions_for_optimization)
 - [Alroomi Website - n-Dimensions](https://al-roomi.org/benchmarks/unconstrained/n-dimensions/)
 - [Rotated Hyper-Ellipsoid Function](https://www.indusmic.com/post/rotated-hyper-ellipsoid-function)
+- [Learn Particle Swarm Optimization (PSO) in 20 minutes](https://youtu.be/JhgDMAm-imI?si=ZkTSoseY6u6Sz3vJ)
