@@ -29,6 +29,7 @@
 | Goldstein Price Function         | Goldstein         | -2 ≤ xi ≤ 2         |
 | Rotated Hyper Ellipsoid Function | Ellipsoid         | -100 ≤ xi ≤ 100     |
 | Alpine Function No.01            | Alpine            | -10 ≤ xi ≤ 10       |
+| Schwefel 2.26 Function           | Schwefel226       | -500 ≤ xi ≤ 500     |
 
 ### Reference
 

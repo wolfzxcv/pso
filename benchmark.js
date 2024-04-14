@@ -81,6 +81,11 @@ function benchmark(arr, type) {
       const Alpine1 = Math.abs(x + Math.sin(x) + 0.1 * x);
       const Alpine2 = Math.abs(y + Math.sin(x) + 0.1 * y);
       return Alpine1 + Alpine2;
+    // Schwefel 2.26 Function
+    case 'Schwefel226':
+      const x1Val = -x * Math.sin(Math.sqrt(Math.abs(x)));
+      const x2Val = -y * Math.sin(Math.sqrt(Math.abs(y)));
+      return x1Val + x2Val;
     default:
       return 0;
   }

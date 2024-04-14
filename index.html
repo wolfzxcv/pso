@@ -7,11 +7,11 @@
     <script src="benchmark.js"></script>
     <script>
       // benchmark function we will use this time
-      const benchmarkFunctionName = 'Schwefel222';
+      const benchmarkFunctionName = 'Schwefel226';
 
       // search range
-      const min = -10;
-      const max = 10;
+      const min = -500;
+      const max = 500;
 
       // inertia weight for SPSO: to make the t-value more beautiful, I set the inertia weight for SPSO always 1
       const w_SPSO = 1;
@@ -152,8 +152,15 @@
                 C1 * r1Y * (each.pBestPositionY - each.positionY) +
                 C2 * r2Y * (currentGBestPositionY - each.positionY);
               // Xit+1 = Xit +Vit+1
-              const positionX = each.positionX + velocityX;
-              const positionY = each.positionY + velocityY;
+
+              // Update particle positions while ensuring they stay within the search space
+              const positionX = clamp(each.positionX + velocityX, min, max);
+              const positionY = clamp(each.positionY + velocityY, min, max);
+
+              // Function to ensure a value stays within a specified range
+              function clamp(value, min, max) {
+                return Math.max(min, Math.min(value, max));
+              }
 
               const fucVal = benchmark([positionX, positionY], functionName);
 
@@ -178,7 +185,7 @@
                 pBestPositionY
               };
             });
-            organizeResult(currentResult);
+            organizeResult(currentResult, whichTime === iterations);
           }
         }
 
@@ -191,7 +198,7 @@
       }
 
       //  organize result
-      function organizeResult(data) {
+      function organizeResult(data, isFinalRound) {
         // find and record the current global best value
         const sortData = data.toSorted((a, b) => a.pBest - b.pBest);
 
@@ -216,6 +223,15 @@
 
         // print current global best value
         console.log('Current gBest: ', currentGBest);
+
+        if (isFinalRound) {
+          console.log(
+            'gBest position: ',
+            currentGBestPositionX,
+            currentGBestPositionY
+          );
+        }
+
         // store the current gBest
         gBestValues.push(currentGBest);
       }
